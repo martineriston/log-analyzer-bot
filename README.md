@@ -52,13 +52,10 @@ log-analyzer-bot/
 Berikut adalah hasil analisa dari log yang diberikan:
 
 ---
-
 ### 1. Error yang Muncul dan Frekuensinya
 * **Error:** `Failed to connect to database connection timeout`
   * **Frekuensi:** **3 kali** (pukul 10:16:01, 10:16:05, dan 10:18:12).
 * *(Catatan Tambahan)* Terdapat **1 peringatan (WARN)**: `High memory usage detected 87%` pada pukul 10:17:30 sebelum koneksi akhirnya pulih (*restored*) pada pukul 10:20:00.
-
----
 
 ### 2. Kemungkinan *Root Cause* (Penyebab Utama)
 Ada dua skenario utama yang kemungkinan saling berhubungan:
@@ -70,18 +67,9 @@ Ada dua skenario utama yang kemungkinan saling berhubungan:
    * Server aplikasi mengalami lonjakan penggunaan RAM (87%) yang menyebabkan latensi tinggi atau kegagalan I/O jaringan, sehingga aplikasi gagal menyambung ke database tepat waktu (*timeout*).
 
 ---
-
 ### 3. Rekomendasi Tindakan
 1. **Periksa Log Database:**
-   * Cek log pada server database di rentang waktu **10:15 – 10:20** untuk memastikan apakah ada *restart*, kehabisan kapasitas (*CPU/RAM spikes*), atau *deadlock*.
-2. **Investigasi Lonjakan Memori (RAM 87%):**
-   * Cek apakah aplikasi memiliki *memory leak* saat terjadi error koneksi.
-   * Pastikan koneksi yang gagal segera ditutup (*cleanup/release*) agar tidak membebani memori server.
-3. **Optimasi Konfigurasi Koneksi Database:**
-   * Tinjau pengaturan *Connection Timeout* dan batas *Connection Pool*.
-   * Terapkan pola **Circuit Breaker** dan *Retry Mechanism* dengan *Exponential Backoff* agar aplikasi tidak membombardir database saat sedang tidak responsif.
-4. **Pasang Monitoring & Alerting Tambahan:**
-   * Buat notifikasi otomatis (misal via Slack/Email) jika penggunaan RAM melebihi 80% atau jika database gagal terhubung lebih dari batas tertentu dalam 1 menit.
+   * Cek log pada server database di rentang waktu **10:15 – 10:20** untuk memastikan apakah ada *restart*, kehabisan kapasitas (*CPU/RAM spikes*), atau *deadlock*....
 \```
 
 ## Roadmap
