@@ -39,3 +39,14 @@ type PromptTokensDetail struct {
 	Modality   string `json:"modality"`
 	TokenCount int    `json:"tokenCount"`
 }
+
+type AnalysisResult struct {
+	Issues []Issue `json:"issues"`
+}
+
+type Issue struct {
+	Error          string `json:"error"`
+	Occurrences    int    `json:"occurrences"`
+	RootCause      string `json:"root_cause"`
+	Recommendation string `json:"recommendation"`
+}

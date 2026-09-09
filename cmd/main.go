@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log-analyzer-bot/internal/model"
 	"log-analyzer-bot/internal/service"
 	"os"
 
@@ -28,11 +30,17 @@ func main() {
 		return
 	}
 
-	prompt := fmt.Sprintf(`Analisa log berikut, kasih ringkasan:
-		- Ada error apa aja dan berapa kali muncul
-		- Kemungkinan root cause
-		- Rekomendasi tindakan
-
+	prompt := fmt.Sprintf(`Analisa log berikut. Kembalikan HANYA dalam format JSON, isinya harus murni tanpa tambahan apapun dan wajib dikembalikan sesuai struktur ini:
+	{
+		"issues": [
+			{
+			"error": "pesan error singkat",
+			"occurrences": jumlah_kemunculan_sebagai_angka,
+			"root_cause": "kemungkinan penyebab",
+			"recommendation": "saran tindakan"
+			}
+		]
+	}
 	Log:
 	%s`, string(logContent))
 
@@ -42,6 +50,23 @@ func main() {
 		fmt.Println("Error saat memanggil Gemini API:", err)
 		return
 	}
+
+	var resp model.AnalysisResult
+
+	if err := json.Unmarshal([]byte(result), &resp); err != nil {
+		fmt.Println("Error saat parsing hasil JSON:", err)
+		return
+	}
+
+	printAnalysis(resp)
+}
+
+func printAnalysis(resp model.AnalysisResult) {
 	fmt.Println("=== Hasil Analisa ===")
-	fmt.Println(result)
+	for i, issue := range resp.Issues {
+		fmt.Printf("\n[%d] %s\n", i+1, issue.Error)
+		fmt.Printf("	Terjadi: %d kali\n", issue.Occurrences)
+		fmt.Printf("	Root Cause: %s\n", issue.RootCause)
+		fmt.Printf("	Rekomendasi: %s\n", issue.Recommendation)
+	}
 }
