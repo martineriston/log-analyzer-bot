@@ -58,3 +58,4 @@ Ada dua skenario utama yang kemungkinan saling berhubungan:
 ## Roadmap
 
 - [x] v1: Basic log analysis via CLI
+- [x] v2: Add JSON structured response to analyze
