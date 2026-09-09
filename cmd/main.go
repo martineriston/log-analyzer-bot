@@ -6,6 +6,7 @@ import (
 	"log-analyzer-bot/internal/model"
 	"log-analyzer-bot/internal/service"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -30,43 +31,72 @@ func main() {
 		return
 	}
 
-	prompt := fmt.Sprintf(`Analisa log berikut. Kembalikan HANYA dalam format JSON, isinya harus murni tanpa tambahan apapun dan wajib dikembalikan sesuai struktur ini:
-	{
-		"issues": [
-			{
-			"error": "pesan error singkat",
-			"occurrences": jumlah_kemunculan_sebagai_angka,
-			"root_cause": "kemungkinan penyebab",
-			"recommendation": "saran tindakan"
-			}
-		]
+	filteredContent := FilterLog(string(logContent))
+
+	chunks := service.ChunkLog(filteredContent, 2)
+
+	var allResp []model.AnalysisResult
+
+	for i, chunk := range chunks {
+		prompt := fmt.Sprintf(`Analisa log berikut. Kembalikan HANYA dalam format JSON, isinya harus murni tanpa tambahan apapun dan wajib dikembalikan sesuai struktur ini:
+		{
+			"issues": [
+				{
+				"error": "pesan error singkat",
+				"occurrences": jumlah_kemunculan_sebagai_angka,
+				"root_cause": "kemungkinan penyebab",
+				"recommendation": "saran tindakan"
+				}
+			]
+		}
+		Log:
+		%s`, chunk)
+
+		result, err := service.AskGemini(apiKey, prompt)
+		if err != nil {
+			fmt.Printf("Error saat memanggil Gemini untuk chunk %d: %v\n", i+1, err)
+			continue
+		}
+
+		var analysis model.AnalysisResult
+		if err := json.Unmarshal([]byte(result), &analysis); err != nil {
+			fmt.Printf("Error saat parsing hasil chunk %d: %v\n", i+1, err)
+			continue
+		}
+		allResp = append(allResp, analysis)
 	}
-	Log:
-	%s`, string(logContent))
 
-	result, err := service.AskGemini(apiKey, prompt)
-
-	if err != nil {
-		fmt.Println("Error saat memanggil Gemini API:", err)
-		return
-	}
-
-	var resp model.AnalysisResult
-
-	if err := json.Unmarshal([]byte(result), &resp); err != nil {
-		fmt.Println("Error saat parsing hasil JSON:", err)
-		return
-	}
-
-	printAnalysis(resp)
+	printAnalysis(allResp)
 }
 
-func printAnalysis(resp model.AnalysisResult) {
-	fmt.Println("=== Hasil Analisa ===")
-	for i, issue := range resp.Issues {
-		fmt.Printf("\n[%d] %s\n", i+1, issue.Error)
-		fmt.Printf("	Terjadi: %d kali\n", issue.Occurrences)
-		fmt.Printf("	Root Cause: %s\n", issue.RootCause)
-		fmt.Printf("	Rekomendasi: %s\n", issue.Recommendation)
+func printAnalysis(resp []model.AnalysisResult) {
+	if len(resp) == 0 {
+		fmt.Println("Tidak ada hasil analisa yang ditemukan.")
+		return
 	}
+	fmt.Println("=== Hasil Analisa ===")
+	for _, issues := range resp {
+		for i, issue := range issues.Issues {
+			fmt.Printf("\n[%d] %s\n", i+1, issue.Error)
+			fmt.Printf("	Terjadi: %d kali\n", issue.Occurrences)
+			fmt.Printf("	Root Cause: %s\n", issue.RootCause)
+			fmt.Printf("	Rekomendasi: %s\n", issue.Recommendation)
+		}
+
+	}
+}
+func FilterLog(logContent string) string {
+	var filteredLines []string
+
+	lines := strings.Split(logContent, "\n")
+
+	for _, line := range lines {
+		upperLine := strings.ToUpper(line)
+		if !strings.Contains(upperLine, "ERROR") && !strings.Contains(upperLine, "WARN") {
+			continue
+		}
+		filteredLines = append(filteredLines, line)
+	}
+
+	return strings.Join(filteredLines, "\n")
 }
