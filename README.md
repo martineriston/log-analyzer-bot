@@ -59,3 +59,4 @@ Ada dua skenario utama yang kemungkinan saling berhubungan:
 
 - [x] v1: Basic log analysis via CLI
 - [x] v2: Add JSON structured response to analyze
+- [x] v3: Filter log only WARN/ERROR, chunk for large logs, retry method with max retry and use exponent backoff
