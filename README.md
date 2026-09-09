@@ -17,21 +17,6 @@ Built as part of learning how to integrate LLM APIs into practical internal auto
 - Go (standard library only for HTTP — no external HTTP frameworks)
 - Google Gemini API (`gemini-2.5-flash`)
 
-## Project Structure
-
-\```
-log-analyzer-bot/
-├── cmd/
-│   └── main.go              # Entry point
-├── internal/
-│   ├── model/
-│   │   └── gemini.go         # Request/response structs
-│   └── service/
-│       └── gemini_service.go # Gemini API integration logic
-└── Logs/
-    └── sample.log             # Example log file for testing
-\```
-
 ## Setup
 
 1. Clone the repo
@@ -51,7 +36,6 @@ log-analyzer-bot/
 === Hasil Analisa ===
 Berikut adalah hasil analisa dari log yang diberikan:
 
----
 ### 1. Error yang Muncul dan Frekuensinya
 * **Error:** `Failed to connect to database connection timeout`
   * **Frekuensi:** **3 kali** (pukul 10:16:01, 10:16:05, dan 10:18:12).
@@ -66,7 +50,6 @@ Ada dua skenario utama yang kemungkinan saling berhubungan:
 2. **Keterbatasan Resource Aplikasi (Resource Starvation):**
    * Server aplikasi mengalami lonjakan penggunaan RAM (87%) yang menyebabkan latensi tinggi atau kegagalan I/O jaringan, sehingga aplikasi gagal menyambung ke database tepat waktu (*timeout*).
 
----
 ### 3. Rekomendasi Tindakan
 1. **Periksa Log Database:**
    * Cek log pada server database di rentang waktu **10:15 – 10:20** untuk memastikan apakah ada *restart*, kehabisan kapasitas (*CPU/RAM spikes*), atau *deadlock*....
